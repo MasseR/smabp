@@ -32,8 +32,22 @@
       rec {
 
         packages = { inherit (hp) smabp; };
-
         defaultPackage = packages.smabp;
+
+        apps.kobodl = {
+          type = "app";
+          program =
+            let
+              wrapped = with pkgs; runCommandNoCC "smabp" { nativeBuildInputs = [ makeWrapper ]; } ''
+                mkdir -p $out/bin
+                cp ${packages.smabp}/bin/smabp $out/bin
+                wrapProgram $out/bin/smabp --prefix PATH : ${lib.makeBinPath [ffmpeg exiftool]}
+                '';
+            in "${wrapped}/bin/smabp";
+        };
+
+        defaultApp = apps.kobodl;
+
         devShell =
           hp.shellFor {
             packages = h: [h.smabp];
