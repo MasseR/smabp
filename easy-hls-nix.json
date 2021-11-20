@@ -1,0 +1,11 @@
+{
+  "url": "https://github.com/ssbothwell/easy-hls-nix",
+  "rev": "393ccab35104d5d49e0ff9eadf7b8654e87abffd",
+  "date": "2021-09-16T11:13:40-07:00",
+  "path": "/nix/store/dsfqcsiahsp9rkip4fsqzz32x0swa3d4-easy-hls-nix",
+  "sha256": "0q1qxlkzjqx2hvf9k2cp5a98vlvsj13lap6hm7gl1kkqp88ai1dw",
+  "fetchLFS": false,
+  "fetchSubmodules": false,
+  "deepClone": false,
+  "leaveDotGit": false
+}
