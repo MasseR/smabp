@@ -1,5 +1,5 @@
-{ mkDerivation, base, bytestring, lens, lib, mtl, optparse-generic
-, text, typed-process
+{ mkDerivation, base, bytestring, containers, directory, filepath
+, lens, lib, mtl, optparse-generic, temporary, text, typed-process
 }:
 mkDerivation {
   pname = "smabp";
@@ -8,9 +8,10 @@ mkDerivation {
   isLibrary = true;
   isExecutable = true;
   libraryHaskellDepends = [
-    base bytestring lens mtl optparse-generic text typed-process
+    base bytestring containers directory filepath lens mtl
+    optparse-generic temporary text typed-process
   ];
   executableHaskellDepends = [ base ];
   license = "unknown";
-  hydraPlatforms = lib.platforms.none;
+  mainProgram = "smabp";
 }

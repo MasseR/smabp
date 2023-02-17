@@ -7,7 +7,7 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import System.FilePath ((</>), dropExtension, takeFileName)
 import System.Process.Typed (proc, readProcessStdout_)
-import Control.Lens ( view, Strict(strict) )
+import Control.Lens ( view, strict )
 import Data.Text.Strict.Lens (utf8)
 import Data.Map.Strict (Map)
 import Data.ByteString.Lazy (ByteString)

@@ -2,17 +2,13 @@
   description = "Smart audiobook player organizer";
 
   inputs = {
-    easy-hls = {
-      url = "github:jkachmar/easy-hls-nix";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    nixpkgs = { url = "github:NixOS/nixpkgs/nixos-unstable"; };
     flake-utils = {
       url = "github:numtide/flake-utils";
-      inputs.nixpkgs.follows = "nixpkgs";
     };
   };
 
-  outputs = { self, nixpkgs, flake-utils, easy-hls }:
+  outputs = { self, nixpkgs, flake-utils }:
   {
     overlay = final: prev: {
       haskellPackages = prev.haskellPackages.override ( old: {
@@ -25,28 +21,28 @@
     //
     flake-utils.lib.eachSystem ["x86_64-linux" "x86_64-darwin"] ( system:
       let
-        pkgs = import nixpkgs { inherit system; overlays = [ self.overlay ]; };
-        hp = pkgs.haskellPackages;
-        hls = (easy-hls.withGhcs [ hp.ghc.version ] ).${system};
+        pkgs = nixpkgs.legacyPackages.${system};
+        hp = pkgs.haskellPackages.override ( old: {
+        overrides = pkgs.lib.composeExtensions ( old.overrides or (_: _: {})) (f: p: {
+          smabp = f.callPackage ./. {};
+        });
+      } );
       in
       rec {
 
         packages = { inherit (hp) smabp; };
         defaultPackage = packages.smabp;
 
-        apps.kobodl = {
-          type = "app";
-          program =
-            let
+        apps.smabp = let
               wrapped = with pkgs; runCommandNoCC "smabp" { nativeBuildInputs = [ makeWrapper ]; } ''
                 mkdir -p $out/bin
                 cp ${packages.smabp}/bin/smabp $out/bin
                 wrapProgram $out/bin/smabp --prefix PATH : ${lib.makeBinPath [ffmpeg exiftool]}
                 '';
-            in "${wrapped}/bin/smabp";
-        };
+        in
+        flake-utils.lib.mkApp { drv = wrapped; };
 
-        defaultApp = apps.kobodl;
+        apps.default = apps.smabp;
 
         devShell =
           hp.shellFor {
@@ -58,7 +54,7 @@
               hp.hlint
               stylish-haskell
               ghcid
-              hls
+              hp.haskell-language-server
 
               hp.graphmod
             ];
