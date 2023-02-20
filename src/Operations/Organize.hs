@@ -56,7 +56,11 @@ organize trace env bucket path = do
   runTrace trace (Scrape meta)
   let newPath = maybe (dropExtension path) toPath meta
       target = "audiobooks" </> newPath </> takeFileName path
-  _ <- uploadImage env bucket path target >> runTrace trace (Copy path target)
+  -- Something wrong with the uploads, the binary data is not the same there as
+  -- it is in here. Chunk, endianness or something?
+  obj <- uploadImage env bucket path target
+  print obj
+  runTrace trace (Copy path target)
   -- removeFile path >> runTrace trace (Remove path)
   pure target
 
