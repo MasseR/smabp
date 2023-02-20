@@ -50,6 +50,8 @@ library
                     , filepath
                     , containers
                     , temporary
+                    , amazonka
+                    , amazonka-s3
     hs-source-dirs:   src
 
 executable smabp

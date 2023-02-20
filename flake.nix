@@ -25,6 +25,14 @@
         hp = pkgs.haskellPackages.override ( old: {
         overrides = pkgs.lib.composeExtensions ( old.overrides or (_: _: {})) (f: p: {
           smabp = f.callPackage ./. {};
+
+          # Need to update amazonka...
+          amazonka-core = f.callPackage nix/amazonka-core.nix {};
+          amazonka-s3 = f.callPackage nix/amazonka-s3.nix {};
+          amazonka-test = f.callPackage nix/amazonka-test.nix {};
+          amazonka = f.callPackage nix/amazonka.nix {};
+          amazonka-sso = f.callPackage nix/amazonka-sso.nix {};
+          amazonka-sts = f.callPackage nix/amazonka-sts.nix {};
         });
       } );
       in
