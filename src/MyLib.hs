@@ -46,7 +46,7 @@ someFunc = do
   decryptKey <- getKey
   let env = discoveredEnv
         { region = Region' "fr-par"
-        , overrides = setEndpoint True "https://s3.fr-par.scw.cloud" 443
+        , overrides = setEndpoint True "s3.fr-par.scw.cloud" 443
         }
       bucket = S3.BucketName bucketName
   let trace = contramap formatOrganizeMsg logger
