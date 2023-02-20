@@ -65,6 +65,11 @@
               hp.haskell-language-server
 
               hp.graphmod
+
+              sops
+
+              ffmpeg
+              exiftool
             ];
           };
         }

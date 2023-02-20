@@ -3,11 +3,10 @@ module Command where
 
 import GHC.Generics (Generic)
 import Options.Generic (ParseRecord)
-import Data.Key (Key)
+import Data.Text (Text)
 
 data Command = Command
-  { decryptKey :: Key
-  , audioFolder :: FilePath
+  { bucketName :: Text
   , inboxFolder :: FilePath
   }
   deriving (Show, Generic)

@@ -14,6 +14,9 @@ import Data.ByteString.Lazy (ByteString)
 import qualified Data.Map.Strict as M
 import System.Directory (copyFile, createDirectoryIfMissing, removeFile)
 import Data.Trace
+import Amazonka (Env, chunkedFile, defaultChunkSize, runResourceT, send)
+import Amazonka.S3 (Bucket, BucketName, PutObjectResponse)
+import qualified Amazonka.S3 as S3
 
 data OrganizeTrace
   = Scrape (Maybe MetaData)
@@ -48,13 +51,20 @@ scrapeMetaData path = do
   where
     cmd = proc "exiftool" [path]
 
-organize :: Trace IO OrganizeTrace -> FilePath -> FilePath -> IO FilePath
-organize trace audioFolder path = do
+organize :: Trace IO OrganizeTrace -> Env -> BucketName -> FilePath -> IO FilePath
+organize trace env bucket path = do
   meta <- scrapeMetaData path
   runTrace trace (Scrape meta)
-  let newPath = audioFolder </> maybe (dropExtension path) toPath meta
-      file = newPath </> takeFileName path
-  createDirectoryIfMissing True newPath
-  copyFile path file >> runTrace trace (Copy path file)
-  removeFile path >> runTrace trace (Remove path)
-  pure file
+  let newPath = maybe (dropExtension path) toPath meta
+      target = newPath </> takeFileName path
+  _ <- uploadImage env bucket path target >> runTrace trace (Copy path target)
+  -- removeFile path >> runTrace trace (Remove path)
+  pure target
+
+uploadImage :: Env -> BucketName -> FilePath -> FilePath -> IO PutObjectResponse
+uploadImage env bucket source target = do
+  obj <- chunkedFile defaultChunkSize source
+  runResourceT $ do
+    let putObj = S3.newPutObject bucket key obj
+        key = S3.ObjectKey (T.pack target)
+    send env putObj

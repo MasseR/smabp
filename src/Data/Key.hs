@@ -5,6 +5,8 @@ module Data.Key where
 
 import Data.Text (Text)
 import Options.Generic (ParseFields(..), ParseField(..), ParseRecord(..))
+import System.Environment (getEnv)
+import qualified Data.Text as T
 
 newtype Key = Key Text
   deriving Show
@@ -19,3 +21,6 @@ instance ParseFields Key
 
 instance ParseRecord Key where
   parseRecord = Key <$> parseRecord
+
+getKey :: IO Key
+getKey = Key . T.pack <$> getEnv "DECRYPT_KEY"

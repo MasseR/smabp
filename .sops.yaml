@@ -1,0 +1,3 @@
+creation_rules:
+  - path_regex: "secrets.yaml$"
+    pgp: "95DBE64C2EA64D6B0E0C8C2F9DE6E04ED1918118"
