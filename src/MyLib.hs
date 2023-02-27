@@ -18,6 +18,7 @@ import Operations.Organize (OrganizeTrace(..), organize)
 import Options.Generic (getRecord)
 import System.Directory (listDirectory)
 import System.FilePath (takeExtension, (</>))
+import S3.Interface (buildInterface)
 
 logger :: Trace IO Text
 logger = Trace TI.putStrLn
@@ -41,16 +42,11 @@ getInputFiles inbox =
 someFunc :: IO ()
 someFunc = do
   Command{..} <- getRecord "smabp"
-  discoveredEnv <- newEnv discover
   decryptKey <- getKey
-  let env = discoveredEnv
-        { region = Region' "fr-par"
-        , overrides = setEndpoint True "s3.fr-par.scw.cloud" 443
-        }
-      bucket = S3.BucketName bucketName
+  s3Interface <- buildInterface bucketName
   let trace = contramap formatOrganizeMsg logger
   inputFiles <- getInputFiles inboxFolder
   for_ inputFiles $ \file -> do
     newFile <- deDRM (contramap (Inaudible file) trace) decryptKey file >>=
-      organize (contramap (Organize file) trace) env bucket
+      organize (contramap (Organize file) trace) s3Interface
     runTrace trace (Organized file newFile)

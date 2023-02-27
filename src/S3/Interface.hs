@@ -28,7 +28,7 @@ import System.FilePath (takeBaseName, (</>))
 type Key = Text
 
 data S3Interface = S3Interface
-  { putFile :: FilePath -> IO Key
+  { putFile :: FilePath -> Key -> IO Key
   -- ^ Upload a file from path
   , getFile :: Key -> FilePath -> IO FilePath
   -- ^ Download a file to a given root
@@ -47,12 +47,11 @@ buildInterface bucketName = do
     , getFile = downloadFile env bucket
     }
   where
-    uploadFile :: Env -> S3.BucketName -> FilePath -> IO Key
-    uploadFile env bucket path = do
+    uploadFile :: Env -> S3.BucketName -> FilePath -> Key -> IO Key
+    uploadFile env bucket path key = do
       obj <- Hashed <$> hashedFile path
       runResourceT $ do
         let putObj = S3.newPutObject bucket (S3.ObjectKey key) obj
-            key = T.pack . takeBaseName $ path
         _ <- send env putObj
         pure key
     downloadFile :: Env -> S3.BucketName -> Key -> FilePath -> IO FilePath

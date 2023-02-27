@@ -1,21 +1,22 @@
 {-# LANGUAGE NamedFieldPuns #-}
-{-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ViewPatterns #-}
 module Operations.Organize where
 
-import Data.Text (Text)
-import qualified Data.Text as T
-import System.FilePath ((</>), dropExtension, takeFileName)
-import System.Process.Typed (proc, readProcessStdout_)
-import Control.Lens ( view, strict )
-import Data.Text.Strict.Lens (utf8)
-import Data.Map.Strict (Map)
-import Data.ByteString.Lazy (ByteString)
-import qualified Data.Map.Strict as M
-import Data.Trace
 import Amazonka (Env, chunkedFile, defaultChunkSize, runResourceT, send)
 import Amazonka.S3 (BucketName, PutObjectResponse)
 import qualified Amazonka.S3 as S3
+import Control.Lens (strict, view)
+import Data.ByteString.Lazy (ByteString)
+import Data.Map.Strict (Map)
+import qualified Data.Map.Strict as M
+import Data.Text (Text)
+import qualified Data.Text as T
+import Data.Text.Strict.Lens (utf8)
+import Data.Trace
+import S3.Interface
+import System.FilePath (dropExtension, takeFileName, (</>))
+import System.Process.Typed (proc, readProcessStdout_)
 
 data OrganizeTrace
   = Scrape (Maybe MetaData)
@@ -50,16 +51,16 @@ scrapeMetaData path = do
   where
     cmd = proc "exiftool" [path]
 
-organize :: Trace IO OrganizeTrace -> Env -> BucketName -> FilePath -> IO FilePath
-organize trace env bucket path = do
+organize :: Trace IO OrganizeTrace -> S3Interface -> FilePath -> IO FilePath
+organize trace interface path = do
   meta <- scrapeMetaData path
   runTrace trace (Scrape meta)
   let newPath = maybe (dropExtension path) toPath meta
       target = "audiobooks" </> newPath </> takeFileName path
   -- Something wrong with the uploads, the binary data is not the same there as
   -- it is in here. Chunk, endianness or something?
-  obj <- uploadImage env bucket path target
-  print obj
+  key <- putFile interface path (T.pack target)
+  print key
   runTrace trace (Copy path target)
   -- removeFile path >> runTrace trace (Remove path)
   pure target

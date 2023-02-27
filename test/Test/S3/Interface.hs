@@ -1,25 +1,26 @@
-{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TypeApplications #-}
 module Test.S3.Interface where
 
-import Data.Generics.Labels ()
+import Conduit (MonadUnliftIO, liftIO, runConduit, runResourceT, (.|))
+import Control.Monad (when)
 import Control.Monad.Trans.Cont
-import Test.Hspec
-import Test.Hspec.Hedgehog
+import Crypto.Hash (Digest, HashAlgorithm)
+import qualified Crypto.Hash as Crypto
+import Crypto.Hash.Algorithms (SHA256)
+import qualified Crypto.Random as Random
+import qualified Data.Conduit.Combinators as C
+import Data.Generics.Labels
+       ()
+import Data.Text (Text)
+import qualified Data.Text as T
 import qualified Hedgehog.Gen as Gen
 import qualified Hedgehog.Range as Range
 import S3.Interface
-import qualified Data.Conduit.Combinators as C
-import Conduit ((.|), runConduit, runResourceT, liftIO, MonadUnliftIO)
-import qualified Data.Text as T
 import System.FilePath (takeBaseName, (</>))
-import Data.Text (Text)
-import qualified Crypto.Random as Random
 import System.IO.Temp (withSystemTempDirectory)
-import Crypto.Hash.Algorithms (SHA256)
-import Crypto.Hash (Digest, HashAlgorithm)
-import qualified Crypto.Hash as Crypto
-import Control.Monad (when)
+import Test.Hspec
+import Test.Hspec.Hedgehog
 
 hash :: (HashAlgorithm a, MonadUnliftIO m) => FilePath -> m (Digest a)
 hash path = C.withSourceFile path $ \source ->
@@ -32,8 +33,7 @@ withTempDir path = ContT (withSystemTempDirectory path)
 buildModel :: FilePath -> IO S3Interface
 buildModel root =
   pure S3Interface
-  { putFile = \path -> do
-      let key = T.pack . takeBaseName $ path
+  { putFile = \path key -> do
       runResourceT $ do
         runConduit $ C.sourceFileBS path .| C.sinkFileBS (root </> T.unpack key)
       pure key
@@ -82,7 +82,7 @@ specGetPut = do
     liftIO $ do
       interface <- buildModel modelroot
       inpath <- write root file
-      key <- putFile interface inpath
+      key <- putFile interface inpath (T.pack $ takeBaseName inpath)
       outpath <- getFile interface key downloadroot
       (,) <$> hash @SHA256 inpath <*> hash @SHA256 outpath
   wanted === got
@@ -110,7 +110,7 @@ specGetPutS3 = do
   wanted === got
   where
     create interface downloadroot inpath = do
-      key <- putFile interface inpath
+      key <- putFile interface inpath (T.pack $ takeBaseName inpath)
       s3path <- getFile interface key downloadroot
       Result <$> pure key <*> hash s3path <*> hash inpath
 
