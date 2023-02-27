@@ -2,6 +2,9 @@ cabal-version:      2.4
 name:               smabp
 version:            0.1.0.0
 
+common warnings
+    ghc-options: -Wall
+
 -- A short (one-line) description of the package.
 -- synopsis:
 
@@ -34,6 +37,7 @@ library
                     , Operations.Organize
                     , Data.Key
                     , Data.Trace
+                    , S3.Interface
 
     -- Modules included in this library but not exported.
     -- other-modules:
@@ -45,6 +49,7 @@ library
                     , text
                     , bytestring
                     , lens
+                    , generic-lens
                     , typed-process
                     , directory
                     , filepath
@@ -52,6 +57,8 @@ library
                     , temporary
                     , amazonka
                     , amazonka-s3
+                    , conduit
+                    , unordered-containers
     hs-source-dirs:   src
 
 executable smabp
@@ -67,3 +74,49 @@ executable smabp
     build-depends: smabp
 
     hs-source-dirs:   app
+
+test-suite smabp-test
+    -- Import common warning flags.
+    import:           warnings
+
+    -- Base language which the package is written in.
+    default-language: Haskell2010
+
+    -- Modules included in this executable, other than Main.
+    other-modules: Test.S3.Interface
+
+    -- LANGUAGE extensions used by modules in this package.
+    -- other-extensions:
+
+    -- The interface type and version of the test suite.
+    type:             exitcode-stdio-1.0
+
+    -- Directories containing source files.
+    hs-source-dirs:   test
+
+    -- The entrypoint to the test suite.
+    main-is:          Main.hs
+
+    -- Test dependencies.
+    build-depends: base ^>=4.16.3.0
+                 , smabp
+                 , hspec
+                 , hedgehog
+                 , hspec-hedgehog
+                 , dhall
+                 , aeson
+                 , either
+                 , temporary
+                 , cryptonite
+                 , conduit
+                 , text
+                 , filepath
+                 , bytestring
+                 , containers
+                 , unordered-containers
+                 , hashable
+                 , transformers
+                 , amazonka
+                 , lens
+                 , generic-lens
+                 , amazonka-s3

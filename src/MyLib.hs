@@ -1,24 +1,23 @@
-{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards #-}
 module MyLib (someFunc) where
 
-import Options.Generic (getRecord)
-import Command
-    ( Command(Command, inboxFolder, bucketName) )
-import System.Directory (listDirectory)
-import System.FilePath (takeExtension, (</>))
-import Data.Foldable (for_)
-import Operations.Inaudible (deDRM, InaudibleTrace(..))
-import Operations.Organize (organize, OrganizeTrace(..))
-import qualified Data.Text.IO as TI
-import Data.Trace ( Trace(..) )
-import Data.Text (Text)
-import Data.Functor.Contravariant (contramap)
-import qualified Data.Text as T
-import Amazonka (newEnv, Region(..), setEndpoint, region, overrides)
+import Amazonka (Region(..), newEnv, overrides, region, setEndpoint)
 import Amazonka.Auth (discover)
 import qualified Amazonka.S3 as S3
+import Command (Command(Command, bucketName, inboxFolder))
+import Data.Foldable (for_)
+import Data.Functor.Contravariant (contramap)
 import Data.Key (getKey)
+import Data.Text (Text)
+import qualified Data.Text as T
+import qualified Data.Text.IO as TI
+import Data.Trace (Trace(..))
+import Operations.Inaudible (InaudibleTrace(..), deDRM)
+import Operations.Organize (OrganizeTrace(..), organize)
+import Options.Generic (getRecord)
+import System.Directory (listDirectory)
+import System.FilePath (takeExtension, (</>))
 
 logger :: Trace IO Text
 logger = Trace TI.putStrLn

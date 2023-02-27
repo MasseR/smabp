@@ -70,6 +70,8 @@
 
               ffmpeg
               exiftool
+
+              awscli2
             ];
           };
         }
